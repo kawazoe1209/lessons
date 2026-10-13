@@ -1,25 +1,6 @@
 # 第3章：学習の仕組み - モデルはどうやって賢くなるのか
 
-> **講義時間目安**: 約40分  
-
-> **ゴール**: 「PyTorch の学習ループ 5 行が、裏で動く数理（損失・勾配・逆伝播・更新）と直結して頭に浮かぶ状態になる」
-
----
-
-## 【講義の全体タイムテーブル（40分）】
-
-| セクション | 時間目安 | 講義の狙い・メリハリ |
-|---|---|---|
-| **前提: なぜ W と b を最適化するのか** | 5分 | 2章との接続。動かせるツマミが W と b だけであることを確認 |
-| **3.1 損失関数 (Loss Function)** | 7分 | 「ズレ」の数値化。なぜ正解率ではなく微分可能な関数なのか |
-| **3.2 勾配降下法 (Gradient Descent)** | 10分 | 傾きの逆向きに進むルール。学習率の罠とミニバッチの意義 |
-| **3.3 誤差逆伝播法 (Backpropagation)** | 11分 | 連鎖律による全勾配の一括計算。PyTorch 学習ループ 5 行の解剖 |
-| **3.4 最適化アルゴリズム (Optimizer)** | 5分 | 慣性＋歩幅調整＝Adam。実務での選定指針 |
-| **まとめ & 第4章への接続** | 2分 | 学習の本質と過学習への伏線 |
-
----
-
-## 【前提】なぜ $W$ と $b$ を最適化するのか？（5分）
+## 【前提】なぜ $W$ と $b$ を最適化するのか？
 
 ### 1. 第2章の復習：モデル内部の計算式
 
@@ -65,31 +46,7 @@ $$
 
 傾き（$W$）だけでなく、発火のハードル（$\mathbf{b}$）を調整して初めて、任意のデータ分布に対して正しい境界線を引くことができます。
 
----
-
-<!-- ========================================== -->
-
-<!-- スライド画像 1：W と b の幾何学的役割 -->
-
-<!-- ========================================== -->
-
-![スライド画像: Wとbの役割と決定境界](slides/01_w_and_b_roles.png)
-
-> **【スライド 1 生成プロンプト】**
-
-> - **用途**: 決定境界における $W$（傾き）と $b$（切片/位置）の幾何学的役割を直感的に解説するスライド
-
-> - **プロンプト（英語）**:
-
->   `A clean technical slide for machine learning presentation. 2D coordinate plane showing linear classification. Left side: lines rotating showing weight W changing slope while passing through origin (0,0). Right side: lines shifting parallel up and down showing bias b changing position without changing slope. Minimalist, modern dark mode UI, clear vector diagram style, white and cyan contrast, 16:9 ratio.`
-
-> - **スライド記載テキスト（指示）**:
-
->   - 左図: 「$W$ (重み) = 境界線の傾き（どの入力を重視するか）」
-
->   - 右図: 「$b$ (バイアス) = 境界線の平行移動（発火のハードルの高さ）」
-
----
+<img width="1672" height="941" alt="Wとbの幾何学的役割" src="https://github.com/user-attachments/assets/1e4d7f11-45e5-400b-a46f-e3eefcd82990" />
 
 ### 3. 「学習」の定義
 
@@ -126,37 +83,10 @@ $$
 
 本章では、まずステップ②の**「正解とのズレをどうやって数値化するのか（損失関数）」**から見ていきます。
 
----
+<img width="1672" height="941" alt="深層学習の4ステップ実行サイクル" src="https://github.com/user-attachments/assets/1ee06e20-b6b1-4b25-9083-a694305572ed" />
 
-<!-- ========================================== -->
 
-<!-- スライド画像 2：深層学習の4ステップ実行サイクル -->
-
-<!-- ========================================== -->
-
-![スライド画像: 深層学習の学習サイクル](slides/02_training_cycle.png)
-
-> **【スライド 2 生成プロンプト】**
-
-> - **用途**: 学習の4ステップ（Forward $\rightarrow$ Loss $\rightarrow$ Backward $\rightarrow$ Step）の循環サイクルを示すスライド
-
-> - **プロンプト（英語）**:
-
->   `Modern infographic flowchart diagram of deep learning training loop. Circular 4-step process: 1. Forward Propagation (Compute prediction), 2. Loss Calculation (Evaluate error L), 3. Backward Propagation (Compute gradients via chain rule), 4. Parameter Update (Optimizer adjusts W and b). Flat minimal tech design, vibrant neon blue and orange accents on dark navy background, clean typography, 16:9 ratio.`
-
-> - **スライド記載テキスト（指示）**:
-
->   1. Forward（順伝播: 予測を計算する）
-
->   2. Loss（損失計算: ズレを数値化する）★本セクション
-
->   3. Backward（誤差逆伝播: 傾きを測る）
-
->   4. Step（パラメータ更新: $W, b$ を書き換える）
-
----
-
-## 3.1 損失関数（Loss Function）（7分）
+## 3.1 損失関数（Loss Function）
 
 ### 1. なぜ「損失関数」が必要なのか？
 
@@ -192,27 +122,7 @@ $$
 
 ---
 
-<!-- ========================================== -->
-
-<!-- スライド画像 3：正解率 vs 損失関数の勾配比較 -->
-
-<!-- ========================================== -->
-
-![スライド画像: 正解率と損失関数の比較](slides/03_accuracy_vs_loss.png)
-
-> **【スライド 3 生成プロンプト】**
-
-> - **用途**: 正解率（階段状・微分不可）と損失関数（なめらかなすり鉢状・勾配降下可能）の対比スライド
-
-> - **プロンプト（英語）**:
-
->   `Side-by-side technical comparison chart on dark theme. Left: Accuracy function showing a flat, step-like staircase graph with slope=0 annotations, indicating gradient descent is impossible. Right: Loss function showing a smooth convex U-shaped curve with tangent arrows indicating continuous slope and clear descent direction toward minimum. Modern tech diagram, presentation slide layout, high contrast, 16:9 ratio.`
-
-> - **スライド記載テキスト（指示）**:
-
->   - 左: 「正解率（階段状）：傾きが 0 なので、どちらへ動かせば改善するか分からない」
-
->   - 右: 「損失関数（なめらか）：傾き（微分）が計算でき、谷底への方向が分かる」
+<img width="1671" height="941" alt="正解率と損失関数の違い" src="https://github.com/user-attachments/assets/c27c4071-1a67-49f3-9299-8f223b6f2729" />
 
 ---
 
@@ -294,29 +204,7 @@ print(round(cross_entropy(probs_bad,  0), 3))   # 2.303（ペナルティ激�
 
 ---
 
-<!-- ========================================== -->
-
-<!-- スライド画像 4：交差エントロピー損失の関数曲線 -->
-
-<!-- ========================================== -->
-
-![スライド画像: 交差エントロピー損失曲線](slides/04_cross_entropy_curve.png)
-
-> **【スライド 4 生成プロンプト】**
-
-> - **用途**: $L = -\log(p)$ のグラフ形状とペナルティの特性を直感的に示すスライド
-
-> - **プロンプト（英語）**:
-
->   `Mathematical coordinate graph of function y = -log(x) for x between 0 and 1. X-axis labeled "Predicted Probability for Correct Class p (0 to 1.0)". Y-axis labeled "Loss L". The curve approaches infinity near x=0 with a warning red area labeled "Severe Penalty", and smoothly drops to 0 at x=1 labeled "Zero Loss". Clean infographic aesthetic, dark blue background, crisp glowing lines, 16:9 ratio.`
-
-> - **スライド記載テキスト（指示）**:
-
->   - $x$軸: 正解クラスの予測確率 $p$（0.0 〜 1.0）
-
->   - $y$軸: 損失 $L$
-
->   - 注釈: 「正解確率が 1 に近づくほど損失は 0、0 に近づくほどペナルティが急上昇」
+<img width="2752" height="1536" alt="Gemini_Generated_Image_x5yo9ux5yo9ux5yo" src="https://github.com/user-attachments/assets/46102a47-7674-4918-978e-72d4e604974d" />
 
 ---
 
@@ -395,27 +283,8 @@ $$
 
 ---
 
-<!-- ========================================== -->
+<img width="2752" height="1536" alt="Gemini_Generated_Image_s7fuiys7fuiys7fu" src="https://github.com/user-attachments/assets/22f2a8d0-456d-4d32-8053-508f049dc671" />
 
-<!-- スライド画像 5：勾配降下法の地形と更新ベクトル -->
-
-<!-- ========================================== -->
-
-![スライド画像: 勾配降下法の地形図](slides/05_gradient_descent_valley.png)
-
-> **【スライド 5 生成プロンプト】**
-
-> - **用途**: 3Dまたは2Dのすり鉢状の谷で、傾きの逆向きにボールが転がり落ちていく様子を示すスライド
-
-> - **プロンプト（英語）**:
-
->   `3D visualization of a smooth convex loss function surface shaped like a bowl. A glowing point representing current parameters moves downward along contour lines toward the global minimum at the center. Red vectors show positive gradient direction pointing uphill, and green arrows show update step pointing downhill in opposite direction. Dark sleek tech aesthetic, glowing data points, 16:9 ratio.`
-
-> - **スライド記載テキスト**:
-
->   - 式: $W \leftarrow W - \eta \cdot \frac{\partial L}{\partial W}$
-
->   - 矢印: 「勾配（上り坂）の逆向きへ一歩踏み出す」
 
 ---
 
@@ -455,29 +324,7 @@ for step in range(1, 21):
 
 ---
 
-<!-- ========================================== -->
-
-<!-- スライド画像 6：学習率の大小による3つの挙動比較 -->
-
-<!-- ========================================== -->
-
-![スライド画像: 学習率の比較](slides/06_learning_rate_comparison.png)
-
-> **【スライド 6 生成プロンプト】**
-
-> - **用途**: 学習率が「小さすぎる」「適切」「大きすぎる」場合の3パターンの挙動比較スライド
-
-> - **プロンプト（英語）**:
-
->   `Three side-by-side plots of loss curves in a U-shaped valley. Left: Learning rate too small, tiny slow steps creeping down. Middle: Learning rate optimal, smooth steady descent reaching minimum in few steps. Right: Learning rate too large, drastic overshoot oscillating wildly and escaping the valley (divergence). Dark tech background, minimalist UI chart design, 16:9 ratio.`
-
-> - **スライド記載テキスト**:
-
->   - 左: 「小さすぎる（進まない・停滞）」
-
->   - 中: 「適切（安定して最小値へ収束）」
-
->   - 右: 「大きすぎる（飛び越えて発散・NaN）」
+<img width="2752" height="1536" alt="Gemini_Generated_Image_3dikg63dikg63dik" src="https://github.com/user-attachments/assets/d4682c58-87d1-4908-b362-8806bbce1f6f" />
 
 ---
 
@@ -497,29 +344,8 @@ for step in range(1, 21):
 
 ---
 
-<!-- ========================================== -->
+<img width="2752" height="1536" alt="Gemini_Generated_Image_rqaftjrqaftjrqaf" src="https://github.com/user-attachments/assets/a336ad70-deb2-4e43-b05a-4e31e735a769" />
 
-<!-- スライド画像 7：バッチ vs ミニバッチ vs SGD の軌跡 -->
-
-<!-- ========================================== -->
-
-![スライド画像: バッチ方式による軌跡の比較](slides/07_batch_vs_minibatch.png)
-
-> **【スライド 7 生成プロンプト】**
-
-> - **用途**: 等高線マップ上で、バッチ（直線的だが重い）、SGD（激しく蛇行）、ミニバッチ（適度なブレを伴い最速で収束）の移動軌跡を対比するスライド
-
-> - **プロンプト（英語）**:
-
->   `Contour plot of a 2D loss surface showing optimization paths from a starting point to the center minimum. Three paths compared: 1. Full Batch (smooth, straight, slow line), 2. Pure SGD (wild zigzag erratic noisy path), 3. Mini-batch (slightly noisy but fast, smooth curved path directly hitting center). Dark blue background, vibrant neon colored path lines, tech presentation slide, 16:9 ratio.`
-
-> - **スライド記載テキスト**:
-
->   - バッチ: 「滑らかだが重い（全データ）」
-
->   - 純SGD: 「ブレが激しい（1データ）」
-
->   - ミニバッチ: **「実務のデファクト標準（GPU並列を最大化）」**
 
 ---
 
@@ -545,27 +371,7 @@ for step in range(1, 21):
 
 ---
 
-<!-- ========================================== -->
-
-<!-- スライド画像 8：数値微分 vs 誤差逆伝播法の計算量比較 -->
-
-<!-- ========================================== -->
-
-![スライド画像: 数値微分と逆伝播の計算量](slides/08_numerical_vs_backprop.png)
-
-> **【スライド 8 生成プロンプト】**
-
-> - **用途**: パラメータ数 N に対して順伝播を N 回繰り返す数値微分と、1回の逆伝播で全員の勾配が求まる誤差逆伝播法の計算コスト対比
-
-> - **プロンプト（英語）**:
-
->   `Infographic comparing computation efficiency. Top panel: "Numerical Differentiation" showing 100 million repeated forward computations with a red bottleneck warning "Complexity: O(N) - Impossible". Bottom panel: "Backpropagation" showing single forward pass followed by single backward reverse gradient flow with green checkmark "Complexity: O(1) - Instantaneous". High-tech schematic diagram, dark mode UI, 16:9 ratio.`
-
-> - **スライド記載テキスト**:
-
->   - 上: 「数値微分：パラメータごとに順伝播（1億回走査 $\rightarrow$ 計算破綻）」
-
->   - 下: 「誤差逆伝播：逆向きに1回流すだけ（全パラメータ一括計算 $\rightarrow$ 実用化）」
+<img width="2752" height="1536" alt="Gemini_Generated_Image_k7fbipk7fbipk7fb" src="https://github.com/user-attachments/assets/2d18d190-e087-4eea-984b-a67f91a05da8" />
 
 ---
 
@@ -609,27 +415,7 @@ print(b.grad)            # -6.0  （b の足元の傾きが記録され�
 
 ---
 
-<!-- ========================================== -->
-
-<!-- スライド画像 9：計算グラフと連鎖律による逆伝播 -->
-
-<!-- ========================================== -->
-
-![スライド画像: 計算グラフと連鎖律](slides/09_computational_graph.png)
-
-> **【スライド 9 生成プロンプト】**
-
-> - **用途**: 計算グラフ上で順伝播のフォワードフローと、逆伝播の勾配リレー（連鎖律）を視覚化したスライド
-
-> - **プロンプト（英語）**:
-
->   `Detailed computational graph diagram for neural network backpropagation. Left to right: nodes x, W, b connecting to multiplication, addition, activation function, and Loss L via blue forward arrows. Right to left: bright glowing orange reverse arrows showing gradient flow backward, labeling partial derivatives multiplied via chain rule. Clean dataflow diagram, dark navy background, modern UI presentation, 16:9 ratio.`
-
-> - **スライド記載テキスト**:
-
->   - 青矢印（順伝播）: 「データと重みを掛け合わせ、損失 $L$ を算出」
-
->   - 橙矢印（逆伝播）: 「連鎖律（掛け算）で出力から入力へ傾きを逆流」
+<img width="2752" height="1536" alt="Gemini_Generated_Image_6plrpj6plrpj6plr" src="https://github.com/user-attachments/assets/be2da326-a026-4594-b77d-ae7c30a51f47" />
 
 ---
 
@@ -668,33 +454,7 @@ PyTorch は `.backward()` を呼ぶたびに、傾きを上書きするのでは
 
 ---
 
-<!-- ========================================== -->
-
-<!-- スライド画像 10：PyTorch 学習ループ 5 行の解剖図 -->
-
-<!-- ========================================== -->
-
-![スライド画像: PyTorch学習ループ5行の解剖](slides/10_pytorch_loop_anatomy.png)
-
-> **【スライド 10 生成プロンプト】**
-
-> - **用途**: PyTorch の標準コード 5 行と、その裏で動作する理論の1対1対応を示す解説スライド
-
-> - **プロンプト（英語）**:
-
->   `Educational code explanation diagram on dark theme IDE interface. Shows 5 clean lines of PyTorch code: 1. optimizer.zero_grad(), 2. pred = model(X), 3. loss = criterion(pred, y), 4. loss.backward(), 5. optimizer.step(). Next to each code line, a glowing callout box explains the physical meaning (Reset memo, Forward inference, Evaluate loss, Reverse chain-rule gradients, Update W and b). Sleek presentation design, 16:9 ratio.`
-
-> - **スライド記載テキスト**:
-
->   1. `zero_grad()`: 足元の傾きメモを白紙に戻す
-
->   2. `model(X)`: 現在の $W, b$ で順伝播を実行
-
->   3. `criterion(...)`: 正解とのズレ $L$ を算出
-
->   4. `loss.backward()`: 逆伝播で全 $W, b$ の傾きを一括計算
-
->   5. `optimizer.step()`: 傾きに従って $W, b$ を更新
+<img width="2752" height="1536" alt="Gemini_Generated_Image_ru2eccru2eccru2e" src="https://github.com/user-attachments/assets/a1dd9239-d30d-4a88-91b0-4e50e8364325" />
 
 ---
 
@@ -721,7 +481,7 @@ print(f"合計更新回数 = {iters_per_epoch * epochs}")       # 500 回更�
 
 ---
 
-## 3.4 最適化アルゴリズム（Optimizer）（5分）
+## 3.4 最適化アルゴリズム（Optimizer）
 
 ### 1. なぜ「素朴な勾配降下法 (SGD)」だけでは不十分なのか？
 
@@ -771,51 +531,12 @@ opt_adamw   = torch.optim.AdamW(params, lr=0.001)      # Transformer系な�
 
 ---
 
-<!-- ========================================== -->
-
-<!-- スライド画像 11：オプティマイザの進化マップ -->
-
-<!-- ========================================== -->
-
-![スライド画像: オプティマイザの進化系譜](slides/11_optimizer_evolution.png)
-
-> **【スライド 11 生成プロンプト】**
-
-> - **用途**: SGD から Momentum（慣性）と RMSProp（歩幅調整）を経て Adam / AdamW へと統合される進化マップ
-
-> - **プロンプト（英語）**:
-
->   `Architecture evolution roadmap of deep learning optimizers. Starting from SGD on the left, splitting into two branches: Branch A "Momentum (Inertia)" and Branch B "RMSProp (Adaptive Learning Rate)". The branches merge into a central prominent hero card "Adam (Combined De-facto Standard)" and forward to "AdamW (Modern Standard for LLMs)". High tech diagram, dark background, glowing connection nodes, 16:9 ratio.`
-
-> - **スライド記載テキスト**:
-
->   - 慣性（Momentum） ＋ 歩幅自動調整（RMSProp） ＝ **Adam**
-
->   - 現在の標準: 通常のタスクは `Adam`、LLM/Transformer は `AdamW`
+<img width="2752" height="1536" alt="Gemini_Generated_Image_g1quzmg1quzmg1qu" src="https://github.com/user-attachments/assets/ebbe2478-64eb-4f06-add8-1abba5e8a466" />
 
 ---
 
-<!-- ========================================== -->
+<img width="2752" height="1536" alt="Gemini_Generated_Image_m24y9nm24y9nm24y" src="https://github.com/user-attachments/assets/48236f4f-3a66-4e8f-9af5-1e242dbf7710" />
 
-<!-- スライド画像 12：谷底へのアプローチ比較（SGD vs Adam） -->
-
-<!-- ========================================== -->
-
-![スライド画像: SGD vs Adamの収束軌跡](slides/12_sgd_vs_adam_valley.png)
-
-> **【スライド 12 生成プロンプト】**
-
-> - **用途**: 狭い谷における素朴なSGDの激しいジグザグと、Adamの滑らかで直線的な収束軌跡の対比
-
-> - **プロンプト（英語）**:
-
->   `Contour map of a narrow, steep ravine loss landscape showing optimization trajectories. Red dashed line: Standard SGD bouncing wildly back and forth between steep walls, making slow progress. Green glowing solid line: Adam optimizer smoothly dampening oscillations and accelerating directly down the ravine center toward the minimum point. Scientific visualization style, dark mode, 16:9 ratio.`
-
-> - **スライド記載テキスト**:
-
->   - 赤（SGD）: 「壁の間を激しくジグザグして前に進めない」
-
->   - 緑（Adam）: 「横揺れを打ち消し、歩幅を最適化して最短で谷底へ直進」
 
 ---
 
@@ -833,7 +554,7 @@ opt_adamw   = torch.optim.AdamW(params, lr=0.001)      # Transformer系な�
 
 ---
 
-## 本章のまとめ（2分）
+## 本章のまとめ
 
 ✅ **前提**: 動かせるツマミは $W$（重要度）と $\mathbf{b}$（しきい値）のみ。初期値はランダム。  
 
@@ -849,7 +570,7 @@ opt_adamw   = torch.optim.AdamW(params, lr=0.001)      # Transformer系な�
 
 ---
 
-## 第4章へのブリッジ（受講生の興味を引く締めくくり）
+## 第4章へのブリッジ
 
 > 「本章の仕組みによって、モデルはデータをもとに $W$ と $\mathbf{b}$ を自動調整し、損失 $L$ をゼロ近くまで減らせるようになりました。
 
@@ -869,24 +590,3 @@ opt_adamw   = torch.optim.AdamW(params, lr=0.001)      # Transformer系な�
 
 ---
 
-## 演習問題
-
-1. 3クラス分類で、あるサンプルの正解がクラス1だったとします。次の2つの予測のうち、交差エントロピー損失が大きいのはどちらですか。実際に $-\log(p)$ を計算して確かめてください。
-
-   - 予測A: `[0.3, 0.4, 0.3]`
-
-   - 予測B: `[0.8, 0.1, 0.1]`
-
-2. 3.2 の勾配降下のコードで、学習率 `lr` を `0.01` / `0.5` / `1.1` に変えて実行し、それぞれ何が起きるか観察してください。`lr = 1.0` にしたときの挙動も予想してから試してみましょう。
-
-3. 訓練データが 12,800 件、バッチサイズ 64、エポック数 30 で学習するとき、パラメータの更新（イテレーション）は合計何回行われますか。
-
-4. 次の学習ループには 1 箇所致命的なバグがあります。指摘して修正してください。また、そのまま実行すると学習にどんな異常が現れるか説明してください。
-
-```python
-for epoch in range(100):
-    pred = model(X)
-    loss = criterion(pred, y)
-    loss.backward()
-    optimizer.step()
-```
