@@ -253,7 +253,7 @@ print("バッチの平均損失:", round(loss.item(), 4))  # 0.2753
 
 ---
 
-## 3.2 勾配降下法（Gradient Descent）（10分）
+## 3.2 勾配降下法（Gradient Descent）
 
 ### 1. 損失を小さくする方向へパラメータを動かす基本原理
 
@@ -349,7 +349,7 @@ for step in range(1, 21):
 
 ---
 
-## 3.3 誤差逆伝播法（Backpropagation）（11分）
+## 3.3 誤差逆伝播法（Backpropagation）
 
 ### 1. なぜ「逆向き」に計算するのか？（計算量の壁）
 
